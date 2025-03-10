@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Emulation Assembler Notes.md",
+                "file": "Research from GPT Discussions.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Emulation Assembler Notes"
+              "title": "Research from GPT Discussions"
             }
           }
         ]
@@ -170,7 +170,9 @@
   },
   "active": "f0b1495037b36031",
   "lastOpenFiles": [
+    "Useful Online Links.md",
     "Emulation Assembler Notes.md",
-    "Useful Online Links.md"
+    "Research from GPT Discussions.md",
+    "sdsad.md"
   ]
 }
