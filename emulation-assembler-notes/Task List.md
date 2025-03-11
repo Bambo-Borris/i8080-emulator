@@ -6,7 +6,6 @@ kanban-plugin: board
 
 ## To Do
 
-- [ ] Implement parser
 - [ ] Implement instruction encoding (then saves to binary file)
 - [ ] Create basic CPU emulator that reads and executes binary file output
 - [ ] Add CLI args to assembler
@@ -15,12 +14,13 @@ kanban-plugin: board
 
 ## In Progress
 
-- [ ] [[Begin work on lexer]]
+- [ ] [[Implement parser]]
 
 
 ## Completed
 
 **Complete**
+- [x] [[Begin work on lexer]]
 
 
 

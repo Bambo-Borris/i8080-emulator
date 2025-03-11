@@ -20,16 +20,27 @@ Opcodes :: enum {
     COUNT,
 }
 
-Token :: [3]string
-
-MNEMONICS := generate_mnemonics_array()
-
 Registers :: enum {
     A = 0x01,
     B = 0x02,
     C = 0x03,
     D = 0x04,
 }
+
+Operand :: union {
+    Registers,
+    u8,
+}
+
+Instruction :: struct {
+    opcode:    Opcodes,
+    operand_a: Operand,
+    operand_b: Operand,
+}
+
+Token :: [3]string
+
+MNEMONICS := generate_mnemonics_array()
 
 main :: proc() {
     asm_file_contents: []byte
@@ -55,8 +66,12 @@ main :: proc() {
 
     tokens := lexer_pass(asm_file_contents)
     defer delete(tokens)
-    
     fmt.printfln("Tokens found: %v", tokens)
+
+    instructions := parse_instructions(tokens[:])
+    defer delete(instructions)
+
+    fmt.printfln("Instructions parsed: %v", instructions)
 }
 
 generate_mnemonics_array :: proc() -> (mnemonic_array: [int(Opcodes.COUNT)]string) {
@@ -77,7 +92,6 @@ lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
     }
 
     split_strings := strings.split_lines(file_as_string, context.temp_allocator)
-    fmt.printfln("split_strings {}", split_strings)
 
     tokens_list := make([dynamic]Token)
     reserve(&tokens_list, len(split_strings))
@@ -109,14 +123,18 @@ lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
             )
         }
 
-        token: Token 
-        #unroll(3) for j in 0..<len(token) {
-            token[j] = strings.clone(possible_tokens[j])
-        }
+        token: Token
+        token[0] = strings.clone(possible_tokens[0])
+        token[1] = strings.clone(possible_tokens[1])
+        token[2] = strings.clone(possible_tokens[2])
 
         append(&tokens_list, token)
     }
 
     return tokens_list
+}
+
+parse_instructions :: proc(tokens_list: []Token) -> [dynamic]Instruction {
+    return {}
 }
 
