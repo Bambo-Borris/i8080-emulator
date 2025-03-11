@@ -18,7 +18,7 @@ Produce a basic emulator for a basic ASM set
 | STORE   | Store register     | 0x02          |
 | ADD     | Add immediate      | 0x03          |
 | SUB     | Subtract immediate | 0x04          |
-Fixed width: 3 bytes, 1 for opcode, 1 for register, and 1 for immedaite
+Fixed width: 3 bytes, 1 for opcode, 1 for register, and 1 for immediate
 
     
     You can expand this table based on your design. For simplicity, assume each instruction has a fixed length (e.g., 3 bytes: 1 for the opcode, 1 for the register, and 1 for the immediate value).
