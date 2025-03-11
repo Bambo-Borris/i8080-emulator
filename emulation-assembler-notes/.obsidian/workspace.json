@@ -11,20 +11,14 @@
             "id": "972b7d6d30f03d8f",
             "type": "leaf",
             "state": {
-              "type": "kanban",
+              "type": "markdown",
               "state": {
-                "file": "Task List.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false
-                  ]
-                }
+                "file": "Research from GPT Discussions.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-trello",
-              "title": "Task List"
+              "icon": "lucide-file",
+              "title": "Research from GPT Discussions"
             }
           }
         ]
@@ -100,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Task List.md",
+                "file": "Research from GPT Discussions.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -110,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Task List"
+              "title": "Backlinks for Research from GPT Discussions"
             }
           },
           {
@@ -177,11 +171,11 @@
   },
   "active": "972b7d6d30f03d8f",
   "lastOpenFiles": [
+    "Begin work on lexer.md",
+    "Task List.md",
     "Research from GPT Discussions.md",
     "Emulation Assembler Central.md",
-    "Begin work on lexer.md",
     "Useful Online Links.md",
-    "Task List.md",
     "Untitled",
     "sdsad.md"
   ]

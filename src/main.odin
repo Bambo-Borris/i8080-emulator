@@ -3,15 +3,26 @@ package i8080
 import "core:fmt"
 import "core:os"
 import "core:os/os2"
+import "core:reflect"
 import "core:strings"
+import "core:unicode/utf8"
+
+/*
+TODO:
+    - Replace printf with logger
+*/
 
 Opcodes :: enum {
-    Move,
-    // Load,
-    // Store,
+    Load,
+    Store,
     Add,
     Sub,
+    COUNT,
 }
+
+Token :: [3]string
+
+MNEMONICS := generate_mnemonics_array()
 
 Registers :: enum {
     A = 0x01,
@@ -39,8 +50,73 @@ main :: proc() {
                 os.exit(1)
             }
 
-            fmt.println(asm_file_contents)
         }
-        fmt.println(arg)
     }
+
+    tokens := lexer_pass(asm_file_contents)
+    defer delete(tokens)
+    
+    fmt.printfln("Tokens found: %v", tokens)
 }
+
+generate_mnemonics_array :: proc() -> (mnemonic_array: [int(Opcodes.COUNT)]string) {
+    for opcode, i in Opcodes {
+        if opcode == .COUNT {
+            break
+        }
+
+        mnemonic_array[i] = strings.to_upper(reflect.enum_string(opcode))
+    }
+    return
+}
+
+lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
+    file_as_string := strings.clone_from_bytes(asm_file, context.temp_allocator)
+    defer {
+        free_all(context.temp_allocator)
+    }
+
+    split_strings := strings.split_lines(file_as_string, context.temp_allocator)
+    fmt.printfln("split_strings {}", split_strings)
+
+    tokens_list := make([dynamic]Token)
+    reserve(&tokens_list, len(split_strings))
+
+    for i in 0 ..< len(split_strings) {
+        line := split_strings[i]
+        line_number := i + 1
+
+        if len(line) == 0 {
+            continue
+        }
+
+        if utf8.rune_at_pos(line, 0) == ';' {
+            continue
+        }
+
+        comments := strings.split(line, ";", context.temp_allocator)
+
+        before_comment := comments[0]
+        trimmed_line := strings.trim_space(before_comment)
+        comma_removed_line, _ := strings.remove_all(trimmed_line, ",", context.temp_allocator)
+        possible_tokens := strings.split(comma_removed_line, " ")
+
+        if len(possible_tokens) != 3 {
+            fmt.eprintfln(
+                "Argument count mismatch on line %v, expected format mnemonic operand, operand but got %v instead",
+                line_number,
+                trimmed_line,
+            )
+        }
+
+        token: Token 
+        #unroll(3) for j in 0..<len(token) {
+            token[j] = strings.clone(possible_tokens[j])
+        }
+
+        append(&tokens_list, token)
+    }
+
+    return tokens_list
+}
+
