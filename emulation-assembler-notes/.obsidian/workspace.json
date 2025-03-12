@@ -4,64 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "b76ae9dd77e65235",
-        "type": "split",
-        "children": [
-          {
-            "id": "407ce71c396df6b2",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "9ecc9836199722bf",
-                "type": "leaf",
-                "state": {
-                  "type": "markdown",
-                  "state": {
-                    "file": "Research from GPT Discussions.md",
-                    "mode": "source",
-                    "source": false
-                  },
-                  "icon": "lucide-file",
-                  "title": "Research from GPT Discussions"
-                }
-              }
-            ]
-          },
-          {
-            "id": "8b426ade76281c28",
-            "type": "tabs",
-            "children": [
-              {
-                "id": "972b7d6d30f03d8f",
-                "type": "leaf",
-                "state": {
-                  "type": "kanban",
-                  "state": {
-                    "file": "Task List.md",
-                    "kanbanViewState": {
-                      "kanban-plugin": "board",
-                      "list-collapse": [
-                        false,
-                        false,
-                        false
-                      ]
-                    }
-                  },
-                  "icon": "lucide-trello",
-                  "title": "Task List"
-                }
-              }
-            ]
-          }
-        ],
-        "direction": "horizontal"
-      },
-      {
-        "id": "62b18790bb38fbdd",
+        "id": "f79fffc948f1edf5",
         "type": "tabs",
         "children": [
           {
-            "id": "9f0cd8a6992ccfdd",
+            "id": "5f7e5ed819fa1e76",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -222,14 +169,18 @@
       "obsidian-kanban:Create new board": false
     }
   },
-  "active": "9f0cd8a6992ccfdd",
+  "active": "5f7e5ed819fa1e76",
   "lastOpenFiles": [
-    "Research from GPT Discussions.md",
-    "Implement parser.md",
     "Task List.md",
+    "Pathway to Assembler & Emulator.md",
     "Useful Online Links.md",
     "Emulation Assembler Central.md",
+    "Implement parser.md",
     "Begin work on lexer.md",
+    "2025-03-12.md",
+    "Untitled Kanban.md",
+    "Untitled 1.canvas",
+    "Untitled.canvas",
     "Untitled",
     "sdsad.md"
   ]
