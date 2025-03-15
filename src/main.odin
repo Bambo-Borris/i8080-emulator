@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:os"
 import "core:os/os2"
 import "core:reflect"
+import "core:slice"
 import "core:strings"
 import "core:unicode/utf8"
 
@@ -32,15 +33,25 @@ Operand :: union {
     u8,
 }
 
+Operand_Type :: enum {
+    Register,
+    Integer_Literal,
+    Hex_Literal,
+}
+
 Instruction :: struct {
     opcode:    Opcodes,
     operand_a: Operand,
     operand_b: Operand,
 }
 
-Token :: [3]string
+Token :: struct {
+    elements: [3]string,
+    line:     int,
+}
 
 MNEMONICS := generate_mnemonics_array()
+MNEMONIC_OPERANDS := generate_mnemonic_operand_array()
 
 main :: proc() {
     asm_file_contents: []byte
@@ -57,7 +68,7 @@ main :: proc() {
             asm_file_contents, err = os2.read_entire_file(arg, context.allocator)
 
             if err != os2.ERROR_NONE {
-                fmt.eprintfln("Unable to open input file %v", arg)
+                fmt.eprintfln("Error: Unable to open input file %v", arg)
                 os.exit(1)
             }
 
@@ -68,8 +79,12 @@ main :: proc() {
     defer delete(tokens)
     fmt.printfln("Tokens found: %v", tokens)
 
-    instructions := parse_instructions(tokens[:])
+    instructions, ok := parse_instructions(tokens[:])
     defer delete(instructions)
+
+    if !ok {
+        os.exit(1)
+    }
 
     fmt.printfln("Instructions parsed: %v", instructions)
 }
@@ -82,6 +97,16 @@ generate_mnemonics_array :: proc() -> (mnemonic_array: [int(Opcodes.COUNT)]strin
 
         mnemonic_array[i] = strings.to_upper(reflect.enum_string(opcode))
     }
+    return
+}
+
+// Need to map instruction mnemonic, to operand type
+generate_mnemonic_operand_array :: proc() -> (operand_array: [int(Opcodes.COUNT)]bit_set[Operand_Type;byte]) {
+    operand_array[cast(int)Opcodes.Load] = {.Integer_Literal, .Hex_Literal}
+    operand_array[cast(int)Opcodes.Store] = {.Hex_Literal}
+    operand_array[cast(int)Opcodes.Add] = {.Register}
+    operand_array[cast(int)Opcodes.Sub] = {.Register}
+
     return
 }
 
@@ -117,16 +142,17 @@ lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
 
         if len(possible_tokens) != 3 {
             fmt.eprintfln(
-                "Argument count mismatch on line %v, expected format mnemonic operand, operand but got %v instead",
+                "Error: Argument count mismatch on line %v, expected format mnemonic operand, operand but got %v instead",
                 line_number,
                 trimmed_line,
             )
         }
 
         token: Token
-        token[0] = strings.clone(possible_tokens[0])
-        token[1] = strings.clone(possible_tokens[1])
-        token[2] = strings.clone(possible_tokens[2])
+        token.elements[0] = strings.clone(possible_tokens[0])
+        token.elements[1] = strings.clone(possible_tokens[1])
+        token.elements[2] = strings.clone(possible_tokens[2])
+        token.line = line_number
 
         append(&tokens_list, token)
     }
@@ -134,7 +160,23 @@ lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
     return tokens_list
 }
 
-parse_instructions :: proc(tokens_list: []Token) -> [dynamic]Instruction {
-    return {}
+parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic]Instruction, ok: bool) {
+    fmt.println("Received tokens %v into ", #line, tokens_list)
+    defer free_all(context.temp_allocator)
+
+    for &token in tokens_list {
+        // First identify the mnemonic we're dealing with and find its opcode
+        // (do search on uppercase form to be safe)
+        uppercase_mnemonic := strings.to_upper(token.elements[0], context.temp_allocator)
+        mnemonic_index, did_find_token := slice.linear_search(MNEMONICS[:], uppercase_mnemonic)
+        if !did_find_token {
+            fmt.eprintfln("Error: Encountered unknown mnemonic '%v' on line %v", token.elements[0], token.line)
+            return
+        }
+
+        _ = cast(Opcodes)mnemonic_index
+    }
+
+    return
 }
 
