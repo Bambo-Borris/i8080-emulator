@@ -10,7 +10,8 @@ import "core:unicode/utf8"
 
 /*
 TODO:
-    - Replace printf with logger
+    - Printing assembler errors should be a convenient operation that doesn't require each call site invoking a print
+    to manually specify the prefix \"Error\" 16/03/25
 */
 
 Opcodes :: enum {
@@ -59,6 +60,7 @@ OPCODES_COUNT :: int(Opcodes.COUNT)
 
 // Need to map instruction mnemonic, to operand type
 // This should map Mnemnonic => Operand_A, Operand_B, Types_Allowed_A, Types_Allowed_B
+// @REFACTOR The naming of this array feels bad, should return to fix this up 16/03/25
 MNEMONIC_OPERANDS := [OPCODES_COUNT]Opcode_Args_Rules {
     // LOAD
     {
@@ -196,10 +198,33 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
             return
         }
 
-        _ = cast(Opcodes)mnemonic_index
+        opcode := cast(Opcodes)mnemonic_index
+        opcode_index := int(opcode)
+
+        args_info := &MNEMONIC_OPERANDS[opcode_index]
+        found_valid_type_for_arg := false
+
+        // There is definitely a more elegant solution here, but for now what we'll do is
+        // we'll iterate over the types allowed for this opcode in the arg 0 slot,
+        // then interrogate if the argument 0 for this token can be treated as any of
+        // the accepted types, if not we have an error and we can halt and exit. We
+        // will then repeat the same for the argument 1
+
+        // @REFACTOR find a better solution here, there is definitely one, maybe
+        // we should parse the token containing the argument and do some deduction
+        // on it to determine if it's actually something valid
+
+        for allowed_arg_type in args_info[0] {
+            fmt.println("Allowed args type", allowed_arg_type)
+            switch allowed_arg_type {
+            case .Register:
+            case .Integer_Literal:
+            case .Hex_Literal:
+            }
+        }
 
         // Validate the first operand type is correct for the opcode extracted
-        // opcode_index := 
+        // MNEMONIC_OPERANDS[]
     }
 
     return
