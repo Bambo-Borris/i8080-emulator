@@ -28,21 +28,25 @@ Registers :: enum {
     D = 0x04,
 }
 
-Operand :: union {
-    Registers,
-    u8,
-}
-
 Operand_Type :: enum {
     Register,
     Integer_Literal,
     Hex_Literal,
 }
 
+Operand_Data :: union {
+    Registers,
+    u8,
+    u16,
+}
+
+Operand_Allowed_Args_Types :: bit_set[Operand_Type;byte]
+Opcode_Args_Rules :: [2]Operand_Allowed_Args_Types
+
 Instruction :: struct {
     opcode:    Opcodes,
-    operand_a: Operand,
-    operand_b: Operand,
+    operand_a: Operand_Data,
+    operand_b: Operand_Data,
 }
 
 Token :: struct {
@@ -51,7 +55,35 @@ Token :: struct {
 }
 
 MNEMONICS := generate_mnemonics_array()
-MNEMONIC_OPERANDS := generate_mnemonic_operand_array()
+OPCODES_COUNT :: int(Opcodes.COUNT)
+
+// Need to map instruction mnemonic, to operand type
+// This should map Mnemnonic => Operand_A, Operand_B, Types_Allowed_A, Types_Allowed_B
+MNEMONIC_OPERANDS := [OPCODES_COUNT]Opcode_Args_Rules {
+    // LOAD
+    {
+        {.Register}, // Arg0 
+        {.Integer_Literal, .Hex_Literal}, // Arg1
+    },
+
+    // STORE
+    {
+        {.Register}, // Arg0
+        {.Hex_Literal}, // Arg1
+    },
+
+    // ADD
+    {
+        {.Register}, // Arg0,
+        {.Integer_Literal, .Hex_Literal}, // Arg1
+    },
+
+    // SUB
+    {
+        {.Register}, // Arg0,
+        {.Integer_Literal, .Hex_Literal}, // Arg1
+    },
+}
 
 main :: proc() {
     asm_file_contents: []byte
@@ -89,7 +121,7 @@ main :: proc() {
     fmt.printfln("Instructions parsed: %v", instructions)
 }
 
-generate_mnemonics_array :: proc() -> (mnemonic_array: [int(Opcodes.COUNT)]string) {
+generate_mnemonics_array :: proc() -> (mnemonic_array: [OPCODES_COUNT]string) {
     for opcode, i in Opcodes {
         if opcode == .COUNT {
             break
@@ -97,16 +129,6 @@ generate_mnemonics_array :: proc() -> (mnemonic_array: [int(Opcodes.COUNT)]strin
 
         mnemonic_array[i] = strings.to_upper(reflect.enum_string(opcode))
     }
-    return
-}
-
-// Need to map instruction mnemonic, to operand type
-generate_mnemonic_operand_array :: proc() -> (operand_array: [int(Opcodes.COUNT)]bit_set[Operand_Type;byte]) {
-    operand_array[cast(int)Opcodes.Load] = {.Integer_Literal, .Hex_Literal}
-    operand_array[cast(int)Opcodes.Store] = {.Hex_Literal}
-    operand_array[cast(int)Opcodes.Add] = {.Register}
-    operand_array[cast(int)Opcodes.Sub] = {.Register}
-
     return
 }
 
@@ -175,8 +197,10 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
         }
 
         _ = cast(Opcodes)mnemonic_index
+
+        // Validate the first operand type is correct for the opcode extracted
+        // opcode_index := 
     }
 
     return
 }
-
