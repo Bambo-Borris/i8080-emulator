@@ -10,6 +10,7 @@ kanban-plugin: board
 - [ ] Create basic CPU emulator that reads and executes binary file output
 - [ ] Add CLI args to assembler
 - [ ] Add profiling hooks to assembler stages
+- [ ] Add tracking allocator use
 
 
 ## In Progress

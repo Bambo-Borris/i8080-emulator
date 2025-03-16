@@ -57,6 +57,8 @@ Token :: struct {
 
 MNEMONICS := generate_mnemonics_array()
 OPCODES_COUNT :: int(Opcodes.COUNT)
+// @REFACTOR this may not be necessary, if deleted also remove func 'generate_register_string_table'
+// REGISTER_STRING_TABLE := generate_register_string_table()
 
 // Need to map instruction mnemonic, to operand type
 // This should map Mnemnonic => Operand_A, Operand_B, Types_Allowed_A, Types_Allowed_B
@@ -87,6 +89,10 @@ MNEMONIC_OPERANDS := [OPCODES_COUNT]Opcode_Args_Rules {
     },
 }
 
+TOKEN_SLOT_OPCODE :: 0
+TOKEN_SLOT_ARG0 :: 1
+TOKEN_SLOT_ARG1 :: 2
+
 main :: proc() {
     asm_file_contents: []byte
 
@@ -115,6 +121,7 @@ main :: proc() {
 
     instructions, ok := parse_instructions(tokens[:])
     defer delete(instructions)
+    fmt.printfln("Valid instructions extracted: %v", instructions)
 
     if !ok {
         os.exit(1)
@@ -133,6 +140,13 @@ generate_mnemonics_array :: proc() -> (mnemonic_array: [OPCODES_COUNT]string) {
     }
     return
 }
+
+// generate_register_string_table :: proc() -> (table: [OPCODES_COUNT]string) {
+//     for &str, index in table {
+//         str = reflect.enum_string(cast(Opcodes)index)
+//     }
+//     return table
+// }
 
 lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
     file_as_string := strings.clone_from_bytes(asm_file, context.temp_allocator)
@@ -188,10 +202,13 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
     fmt.println("Received tokens %v into ", #line, tokens_list)
     defer free_all(context.temp_allocator)
 
+    instructions_list = make(type_of(instructions_list))
+    reserve(&instructions_list, len(tokens_list))
+
     for &token in tokens_list {
         // First identify the mnemonic we're dealing with and find its opcode
         // (do search on uppercase form to be safe)
-        uppercase_mnemonic := strings.to_upper(token.elements[0], context.temp_allocator)
+        uppercase_mnemonic := strings.to_upper(token.elements[TOKEN_SLOT_OPCODE], context.temp_allocator)
         mnemonic_index, did_find_token := slice.linear_search(MNEMONICS[:], uppercase_mnemonic)
         if !did_find_token {
             fmt.eprintfln("Error: Encountered unknown mnemonic '%v' on line %v", token.elements[0], token.line)
@@ -202,30 +219,56 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
         opcode_index := int(opcode)
 
         args_info := &MNEMONIC_OPERANDS[opcode_index]
-        found_valid_type_for_arg := false
 
-        // There is definitely a more elegant solution here, but for now what we'll do is
-        // we'll iterate over the types allowed for this opcode in the arg 0 slot,
-        // then interrogate if the argument 0 for this token can be treated as any of
-        // the accepted types, if not we have an error and we can halt and exit. We
-        // will then repeat the same for the argument 1
+        operand_a, got_operand_a := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[0])
+        operand_b, got_operand_b := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[1])
 
-        // @REFACTOR find a better solution here, there is definitely one, maybe
-        // we should parse the token containing the argument and do some deduction
-        // on it to determine if it's actually something valid
-
-        for allowed_arg_type in args_info[0] {
-            fmt.println("Allowed args type", allowed_arg_type)
-            switch allowed_arg_type {
-            case .Register:
-            case .Integer_Literal:
-            case .Hex_Literal:
-            }
+        instruction := Instruction {
+            opcode    = opcode,
+            operand_a = operand_a,
+            operand_b = operand_b,
         }
 
-        // Validate the first operand type is correct for the opcode extracted
-        // MNEMONIC_OPERANDS[]
+        // @TODO Validate all instructions
+
+        append(&instructions_list, instruction)
     }
 
     return
 }
+
+convert_arg_string_to_operand :: proc(arg_string: string, arg_info: Operand_Allowed_Args_Types) -> (operand: Operand_Data, ok: bool) {
+    // There is definitely a more elegant solution here, but for now what we'll do is
+    // we'll iterate over the types allowed for this opcode in the arg 0 slot,
+    // then interrogate if the argument 0 for this token can be treated as any of
+    // the accepted types, if not we have an error and we can halt and exit. We
+    // will then repeat the same for the argument 1
+
+    // @REFACTOR find a better solution here, there is definitely one, maybe
+    // we should parse the token containing the argument and do some deduction
+    // on it to determine if it's actually something valid
+    found_valid_type_for_arg := false
+
+    for allowed_arg_type in arg_info {
+        fmt.println("Allowed args type", allowed_arg_type)
+        switch allowed_arg_type {
+        case .Register:
+            fmt.println("Checking arg string", arg_string, "is", allowed_arg_type)
+            uppercase_register_name := strings.to_upper(arg_string, context.temp_allocator)
+            register_enum_value, found_correct_enum_value := reflect.enum_from_name(Registers, uppercase_register_name)
+            if found_correct_enum_value {
+                found_valid_type_for_arg = true
+                operand = register_enum_value
+            }
+        // if check_arg_string_is_register(token.elements[TOKEN_SLOT_ARG0]) {
+        // }
+        case .Integer_Literal:
+            fmt.println("Checking arg string is", allowed_arg_type)
+        case .Hex_Literal:
+            fmt.println("Checking arg string is", allowed_arg_type)
+        }
+    }
+
+    return
+}
+
