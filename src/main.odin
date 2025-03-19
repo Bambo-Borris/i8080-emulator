@@ -5,6 +5,7 @@ import "core:os"
 import "core:os/os2"
 import "core:reflect"
 import "core:slice"
+import "core:strconv"
 import "core:strings"
 import "core:unicode/utf8"
 
@@ -247,7 +248,6 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
             return
         }
 
-
         operand_a_type := operand_data_to_operand_type(operand_a)
 
         if operand_a_type not_in MNEMONIC_OPERANDS[int(opcode)][0] {
@@ -260,7 +260,7 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
             )
         }
 
-        operand_b, got_operand_b := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[1])
+        operand_b, got_operand_b := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG1], args_info[1])
         if !got_operand_b {
             return
         }
@@ -299,7 +299,6 @@ convert_arg_string_to_operand :: proc(arg_string: string, arg_info: Operand_Allo
     // @REFACTOR find a better solution here, there is definitely one, maybe
     // we should parse the token containing the argument and do some deduction
     // on it to determine if it's actually something valid
-    found_valid_type_for_arg := false
 
     for allowed_arg_type in arg_info {
         fmt.println("Allowed args type", allowed_arg_type)
@@ -309,15 +308,31 @@ convert_arg_string_to_operand :: proc(arg_string: string, arg_info: Operand_Allo
             uppercase_register_name := strings.to_upper(arg_string, context.temp_allocator)
             register_enum_value, found_correct_enum_value := reflect.enum_from_name(Registers, uppercase_register_name)
             if found_correct_enum_value {
-                found_valid_type_for_arg = true
+                ok = true
                 operand = register_enum_value
+                break
             }
-
         // if check_arg_string_is_register(token.elements[TOKEN_SLOT_ARG0]) {
         // }
 
         case .Integer_Literal:
-            fmt.println("Checking arg string is", allowed_arg_type)
+            // fmt.println("Checking arg string is", allowed_arg_type)
+
+            is_numeric_arg := true
+
+            for r in arg_string {
+                if !is_numeric_rune(r) {
+                    is_numeric_arg = false
+                    break
+                }
+            }
+
+            if is_numeric_arg {
+                operand = cast(u8)strconv.atoi(arg_string)
+                ok = true
+                break
+            }
+
 
         case .Address_Literal:
             fmt.println("Checking arg string is", allowed_arg_type)
@@ -370,5 +385,11 @@ operand_data_to_operand_type :: #force_inline proc(data: Operand_Data) -> (type:
     }
 
     return
+}
+
+is_numeric_rune :: #force_inline proc(r: rune) -> bool {
+    @(static) numbers := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+    _, found := slice.linear_search(numbers[:], r)
+    return found
 }
 
