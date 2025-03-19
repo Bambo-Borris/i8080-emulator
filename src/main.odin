@@ -32,7 +32,8 @@ Registers :: enum {
 Operand_Type :: enum {
     Register,
     Integer_Literal,
-    Hex_Literal,
+    Address_Literal,
+    COUNT,
 }
 
 Operand_Data :: union {
@@ -55,8 +56,12 @@ Token :: struct {
     line:     int,
 }
 
+OPERAND_TYPE_FANCY_NAMES := generate_operand_type_fancy_name()
 MNEMONICS := generate_mnemonics_array()
+
 OPCODES_COUNT :: int(Opcodes.COUNT)
+OPERAND_TYPE_COUNT :: int(Operand_Type.COUNT)
+
 // @REFACTOR this may not be necessary, if deleted also remove func 'generate_register_string_table'
 // REGISTER_STRING_TABLE := generate_register_string_table()
 
@@ -67,31 +72,32 @@ MNEMONIC_OPERANDS := [OPCODES_COUNT]Opcode_Args_Rules {
     // LOAD
     {
         {.Register}, // Arg0 
-        {.Integer_Literal, .Hex_Literal}, // Arg1
+        {.Integer_Literal}, // Arg1
     },
 
     // STORE
     {
         {.Register}, // Arg0
-        {.Hex_Literal}, // Arg1
+        {.Address_Literal}, // Arg1
     },
 
     // ADD
     {
         {.Register}, // Arg0,
-        {.Integer_Literal, .Hex_Literal}, // Arg1
+        {.Integer_Literal, .Integer_Literal}, // Arg1
     },
 
     // SUB
     {
         {.Register}, // Arg0,
-        {.Integer_Literal, .Hex_Literal}, // Arg1
+        {.Integer_Literal, .Integer_Literal}, // Arg1
     },
 }
 
 TOKEN_SLOT_OPCODE :: 0
 TOKEN_SLOT_ARG0 :: 1
 TOKEN_SLOT_ARG1 :: 2
+
 
 main :: proc() {
     asm_file_contents: []byte
@@ -121,7 +127,10 @@ main :: proc() {
 
     instructions, ok := parse_instructions(tokens[:])
     defer delete(instructions)
+
     fmt.printfln("Valid instructions extracted: %v", instructions)
+
+    ok = write_binary_output(instructions[:])
 
     if !ok {
         os.exit(1)
@@ -147,6 +156,19 @@ generate_mnemonics_array :: proc() -> (mnemonic_array: [OPCODES_COUNT]string) {
 //     }
 //     return table
 // }
+
+generate_operand_type_fancy_name :: proc() -> (out: [OPERAND_TYPE_COUNT]string) {
+    for ot, index in Operand_Type {
+        if ot == .COUNT {
+            break
+        }
+        str := reflect.enum_string(ot)
+        output, _ := strings.replace(str, "_", " ", -1)
+        out[index] = output
+    }
+    fmt.println(out)
+    return
+}
 
 lexer_pass :: proc(asm_file: []byte) -> [dynamic]Token {
     file_as_string := strings.clone_from_bytes(asm_file, context.temp_allocator)
@@ -221,7 +243,38 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
         args_info := &MNEMONIC_OPERANDS[opcode_index]
 
         operand_a, got_operand_a := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[0])
+        if !got_operand_a {
+            return
+        }
+
+
+        operand_a_type := operand_data_to_operand_type(operand_a)
+
+        if operand_a_type not_in MNEMONIC_OPERANDS[int(opcode)][0] {
+            /// @REFACTOR Rework the below error message to also list valid argument types
+            fmt.eprintfln(
+                "Error: Invalid first operand type found on line %v, '%v' was deduced to be of type %v",
+                token.line,
+                token.elements[1],
+                OPERAND_TYPE_FANCY_NAMES[int(operand_a_type)],
+            )
+        }
+
         operand_b, got_operand_b := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[1])
+        if !got_operand_b {
+            return
+        }
+
+        operand_b_type := operand_data_to_operand_type(operand_b)
+
+        if operand_b_type not_in MNEMONIC_OPERANDS[int(opcode)][1] {
+            fmt.eprintfln(
+                "Error: Invalid second operand type found on line %v, '%v' was deduced to be of type %v",
+                token.line,
+                token.elements[1],
+                OPERAND_TYPE_FANCY_NAMES[int(operand_a_type)],
+            )
+        }
 
         instruction := Instruction {
             opcode    = opcode,
@@ -230,7 +283,6 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
         }
 
         // @TODO Validate all instructions
-
         append(&instructions_list, instruction)
     }
 
@@ -260,13 +312,61 @@ convert_arg_string_to_operand :: proc(arg_string: string, arg_info: Operand_Allo
                 found_valid_type_for_arg = true
                 operand = register_enum_value
             }
+
         // if check_arg_string_is_register(token.elements[TOKEN_SLOT_ARG0]) {
         // }
+
         case .Integer_Literal:
             fmt.println("Checking arg string is", allowed_arg_type)
-        case .Hex_Literal:
+
+        case .Address_Literal:
             fmt.println("Checking arg string is", allowed_arg_type)
+
+        case .COUNT:
+            panic("Invalid enum state encountered")
         }
+    }
+
+    return
+}
+
+write_binary_output :: proc(instructions: []Instruction) -> bool {
+    output_file_handle, error := os_open_agnostic("program.bin", os.O_RDWR | os.O_CREATE | os.O_TRUNC)
+    defer os.close(output_file_handle)
+
+    if error != os.ERROR_NONE {
+        fmt.eprintln("Error: Unable to open output file program.bin")
+        return false
+    }
+
+    for instruction in instructions {
+        os.write_byte(output_file_handle, cast(byte)instruction.opcode)
+    }
+
+    // os.write_byte(output_file_handle, {})
+    return true
+}
+
+@(require_results)
+os_open_agnostic :: proc(path: string, mode: int) -> (os.Handle, os.Error) {
+    when ODIN_OS == .Windows {
+        handle, err := os.open(path, mode)
+    } else {
+        handle, err := os.open(path, mode, os.S_IRUSR | os.S_IWUSR)
+    }
+
+    return handle, err
+}
+
+@(require_results)
+operand_data_to_operand_type :: #force_inline proc(data: Operand_Data) -> (type: Operand_Type) {
+    switch union_type in data {
+    case Registers:
+        type = .Register
+    case u8:
+        type = .Integer_Literal
+    case u16:
+        type = .Address_Literal
     }
 
     return
