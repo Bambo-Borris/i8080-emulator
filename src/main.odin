@@ -388,8 +388,28 @@ operand_data_to_operand_type :: #force_inline proc(data: Operand_Data) -> (type:
 }
 
 is_numeric_rune :: #force_inline proc(r: rune) -> bool {
-    @(static) numbers := []rune{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-    _, found := slice.linear_search(numbers[:], r)
-    return found
+    switch r {
+    case '0':
+        fallthrough
+    case '1':
+        fallthrough
+    case '2':
+        fallthrough
+    case '3':
+        fallthrough
+    case '4':
+        fallthrough
+    case '5':
+        fallthrough
+    case '6':
+        fallthrough
+    case '7':
+        fallthrough
+    case '8':
+        fallthrough
+    case '9':
+        return true
+    }
+    return false
 }
 
