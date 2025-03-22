@@ -17,7 +17,7 @@
             "cwd": "${workspaceFolder}",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/tt",
+            "program": "${workspaceFolder}/build/asm",
             "MIMode": "gdb",
             "preLaunchTask": "Build",
             "setupCommands": [
@@ -33,7 +33,7 @@
                 }
             ],
             "args": [
-                "win32.tex"
+                "test_files/test.asm"
             ]
         }
     ]
