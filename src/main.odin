@@ -13,7 +13,15 @@ import "core:unicode/utf8"
 /*
 TODO:
     - Printing assembler errors should be a convenient operation that doesn't require each call site invoking a print
-    to manually specify the prefix \"Error\" 16/03/25
+    to manually specify the prefix \"Error\" 
+    Bambo 16/03/25
+
+    - Should uppercase all string tokens for arguments
+    Bambo 23/03/25
+
+    - Need to validate numerical literals aren't negative
+    Bambo 23/03/25
+    
 */
 
 Opcodes :: enum {
@@ -96,7 +104,6 @@ MNEMONIC_OPERANDS := [OPCODES_COUNT]Opcode_Args_Rules {
 TOKEN_SLOT_OPCODE :: 0
 TOKEN_SLOT_ARG0 :: 1
 TOKEN_SLOT_ARG1 :: 2
-
 
 main :: proc() {
     asm_file_contents: []byte
@@ -333,7 +340,41 @@ convert_arg_string_to_operand :: proc(
 
 
         case .Address_Literal:
-            fmt.println("Checking arg string is", allowed_arg_type)
+            if len(arg_string) < 3 {
+                continue
+            }
+
+            hex_prefix_substring, got_prefix := strings.substring(arg_string, 0, 2)
+            if !got_prefix || hex_prefix_substring != "0x" {
+                continue
+            }
+
+            hex_str, _ := strings.substring_from(arg_string, 2)
+            fmt.println(hex_str)
+
+            uppercased := strings.to_upper(hex_str, context.temp_allocator)
+            is_valid_hex := true
+            for r in uppercased {
+                if !is_hex_valid_rune(r) {
+                    is_valid_hex = false
+                    break
+                }
+            }
+
+            if !is_valid_hex {
+                continue
+            }
+
+            // Use arg string since the format 0x000 is read properly by atoi
+            as_integer := strconv.atoi(arg_string)
+            if as_integer > cast(int)max(u16) {
+                fmt.printfln("Error: Argument '%v' on line %v exceeds maximum integer size of %v", arg_string, line_number, max(u8))
+                break
+            }
+
+            operand = cast(u16)as_integer
+            ok = true
+            break
 
         case .COUNT:
             panic("Invalid enum state encountered")
@@ -422,6 +463,27 @@ is_numeric_rune :: #force_inline proc(r: rune) -> bool {
     case '9':
         return true
     }
+    return false
+}
+
+is_hex_valid_rune :: proc(r: rune) -> bool {
+    if is_numeric_rune(r) do return true
+
+    switch r {
+    case 'A':
+        fallthrough
+    case 'B':
+        fallthrough
+    case 'C':
+        fallthrough
+    case 'D':
+        fallthrough
+    case 'E':
+        fallthrough
+    case 'F':
+        return true
+    }
+
     return false
 }
 

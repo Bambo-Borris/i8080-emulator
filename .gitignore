@@ -4,3 +4,4 @@ build/
 *.rdbg
 *.zip
 *.res
+*.bin
