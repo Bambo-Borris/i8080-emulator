@@ -243,7 +243,7 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
 
         args_info := &MNEMONIC_OPERANDS[opcode_index]
 
-        operand_a, got_operand_a := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[0])
+        operand_a, got_operand_a := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG0], args_info[0], token.line)
         if !got_operand_a {
             return
         }
@@ -260,7 +260,7 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
             )
         }
 
-        operand_b, got_operand_b := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG1], args_info[1])
+        operand_b, got_operand_b := convert_arg_string_to_operand(token.elements[TOKEN_SLOT_ARG1], args_info[1], token.line)
         if !got_operand_b {
             return
         }
@@ -289,7 +289,14 @@ parse_instructions :: proc(tokens_list: []Token) -> (instructions_list: [dynamic
     return
 }
 
-convert_arg_string_to_operand :: proc(arg_string: string, arg_info: Operand_Allowed_Args_Types) -> (operand: Operand_Data, ok: bool) {
+convert_arg_string_to_operand :: proc(
+    arg_string: string,
+    arg_info: Operand_Allowed_Args_Types,
+    line_number: int,
+) -> (
+    operand: Operand_Data,
+    ok: bool,
+) {
     // There is definitely a more elegant solution here, but for now what we'll do is
     // we'll iterate over the types allowed for this opcode in the arg 0 slot,
     // then interrogate if the argument 0 for this token can be treated as any of
@@ -312,23 +319,26 @@ convert_arg_string_to_operand :: proc(arg_string: string, arg_info: Operand_Allo
                 operand = register_enum_value
                 break
             }
-        // if check_arg_string_is_register(token.elements[TOKEN_SLOT_ARG0]) {
-        // }
 
         case .Integer_Literal:
-            // fmt.println("Checking arg string is", allowed_arg_type)
+            // Deduce if we're an integer literal
+            is_hex_literal := strings.contains(arg_string, "0x")
 
-            is_numeric_arg := true
-
+            is_decimal_literal := true
             for r in arg_string {
                 if !is_numeric_rune(r) {
-                    is_numeric_arg = false
+                    is_decimal_literal = false
                     break
                 }
             }
 
-            if is_numeric_arg {
-                operand = cast(u8)strconv.atoi(arg_string)
+            if is_decimal_literal || is_hex_literal {
+                literal_as_int := strconv.atoi(arg_string)
+                if literal_as_int > cast(int)max(u8) {
+                    fmt.printfln("Error: Argument '%v' on line %v exceeds maximum integer size of %v", arg_string, line_number, max(u8))
+                    break
+                }
+                operand = cast(u8)literal_as_int
                 ok = true
                 break
             }
