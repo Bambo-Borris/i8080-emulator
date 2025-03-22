@@ -1,6 +1,7 @@
 package i8080
 
 import "core:fmt"
+import "core:mem"
 import "core:os"
 import "core:os/os2"
 import "core:reflect"
@@ -62,9 +63,6 @@ MNEMONICS := generate_mnemonics_array()
 
 OPCODES_COUNT :: int(Opcodes.COUNT)
 OPERAND_TYPE_COUNT :: int(Operand_Type.COUNT)
-
-// @REFACTOR this may not be necessary, if deleted also remove func 'generate_register_string_table'
-// REGISTER_STRING_TABLE := generate_register_string_table()
 
 // Need to map instruction mnemonic, to operand type
 // This should map Mnemnonic => Operand_A, Operand_B, Types_Allowed_A, Types_Allowed_B
@@ -150,13 +148,6 @@ generate_mnemonics_array :: proc() -> (mnemonic_array: [OPCODES_COUNT]string) {
     }
     return
 }
-
-// generate_register_string_table :: proc() -> (table: [OPCODES_COUNT]string) {
-//     for &str, index in table {
-//         str = reflect.enum_string(cast(Opcodes)index)
-//     }
-//     return table
-// }
 
 generate_operand_type_fancy_name :: proc() -> (out: [OPERAND_TYPE_COUNT]string) {
     for ot, index in Operand_Type {
@@ -363,10 +354,24 @@ write_binary_output :: proc(instructions: []Instruction) -> bool {
 
     for instruction in instructions {
         os.write_byte(output_file_handle, cast(byte)instruction.opcode)
+        write_operand(output_file_handle, instruction.operand_a)
+        write_operand(output_file_handle, instruction.operand_b)
     }
 
-    // os.write_byte(output_file_handle, {})
     return true
+}
+
+write_operand :: proc(handle: os.Handle, operand: Operand_Data) {
+    switch &arg_type in operand {
+    case Registers:
+        os.write_byte(handle, cast(byte)arg_type)
+    case u8:
+        os.write_byte(handle, arg_type)
+    case u16:
+        bytes := mem.ptr_to_bytes(&arg_type)
+        os.write(handle, bytes)
+    }
+
 }
 
 @(require_results)
