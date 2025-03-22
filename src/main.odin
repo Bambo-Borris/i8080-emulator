@@ -297,15 +297,12 @@ convert_arg_string_to_operand :: proc(
     operand: Operand_Data,
     ok: bool,
 ) {
-    // There is definitely a more elegant solution here, but for now what we'll do is
-    // we'll iterate over the types allowed for this opcode in the arg 0 slot,
-    // then interrogate if the argument 0 for this token can be treated as any of
-    // the accepted types, if not we have an error and we can halt and exit. We
-    // will then repeat the same for the argument 1
 
-    // @REFACTOR find a better solution here, there is definitely one, maybe
-    // we should parse the token containing the argument and do some deduction
-    // on it to determine if it's actually something valid
+    // @REFACTOR In assembly we don't tend to support different arg types
+    // per instruction mnemonic, instead each instruction mnemonic is specifically
+    // tied to 1-2 arg types, this means we could collapse this down to a lookup
+    // table to lookup the arg type for the instruction and then instead we'd be able
+    // to do some very simple validation checks and the complexity of this loop vanishes.
 
     for allowed_arg_type in arg_info {
         fmt.println("Allowed args type", allowed_arg_type)
