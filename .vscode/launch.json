@@ -34,7 +34,10 @@
             ],
             "args": [
                 "-f",
-                "test_files/test.asm"
+                "test_files/test.asm",
+                "-o",
+                "test.obj",
+                "-d"
             ]
         }
     ]

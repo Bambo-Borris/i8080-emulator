@@ -118,14 +118,22 @@ TOKEN_SLOT_ARG1 :: 2
 main :: proc() {
     asm_file_contents: []byte
 
-    cli_args_table := parse_cli_args()
-    if cli_args_table == nil {
+    cli_args_table, got_args := parse_cli_args()
+    if cli_args_table == nil && got_args {
         output_help()
         return
+    } else if !got_args {
+        os.exit(1)
     }
+
 
     if "f" not_in cli_args_table {
         fmt.eprintln("No input file supplied! Try -h flag for help")
+        os.exit(1)
+    }
+
+    if "o" not_in cli_args_table {
+        fmt.eprintln("No output file path supplied! Try -h flag for help")
         os.exit(1)
     }
 
@@ -154,7 +162,7 @@ main :: proc() {
 
     log.debugf("Valid instructions extracted: %v", instructions)
 
-    ok = write_binary_output(instructions[:])
+    ok = write_binary_output(instructions[:], cli_args_table["o"].data)
 
     if !ok {
         os.exit(1)
@@ -403,8 +411,8 @@ convert_arg_string_to_operand :: proc(
     return
 }
 
-write_binary_output :: proc(instructions: []Instruction) -> bool {
-    output_file_handle, error := os_open_agnostic("program.bin", os.O_RDWR | os.O_CREATE | os.O_TRUNC)
+write_binary_output :: proc(instructions: []Instruction, output_file_name: string) -> bool {
+    output_file_handle, error := os_open_agnostic(output_file_name, os.O_RDWR | os.O_CREATE | os.O_TRUNC)
     defer os.close(output_file_handle)
 
     if error != os.ERROR_NONE {
@@ -506,8 +514,10 @@ is_hex_valid_rune :: proc(r: rune) -> bool {
     return false
 }
 
-parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data) {
+@(require_results)
+parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data, ok: bool) {
     is_parsing_arg := false
+    current_parsing_cli_index: int
 
     for arg, i in os.args {
         // Consume the first arg, it's the path to the binary
@@ -520,7 +530,6 @@ parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data) {
 
         // @REFACTOR this is really messy with respect to the use of two flags
         // and there's a cleaner solution for sure.
-        current_parsing_cli_index: int
         if !is_parsing_arg {
             if start_rune := arg[0]; start_rune == '-' {
                 trimmed := strings.trim_left(arg, "-")
@@ -539,7 +548,7 @@ parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data) {
 
                 if !found_matching_arg {
                     fmt.eprintfln("No matching argument for flag -%v! Try --h", arg)
-                    return {}
+                    return {}, false
                 }
             }
         } else {
@@ -551,7 +560,7 @@ parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data) {
         }
     }
 
-    return
+    return out_args_table, true
 }
 
 output_help :: proc() {
