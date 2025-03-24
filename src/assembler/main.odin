@@ -1,5 +1,6 @@
-package i8080
+package assembler
 
+import "comlib:io"
 import "core:fmt"
 import "core:log"
 import "core:mem"
@@ -10,7 +11,6 @@ import "core:slice"
 import "core:strconv"
 import "core:strings"
 import "core:unicode/utf8"
-
 /*
 TODO:
     (Also refer to sections like @REFACTOR or @SPEED for other potential TODOs)
@@ -412,7 +412,7 @@ convert_arg_string_to_operand :: proc(
 }
 
 write_binary_output :: proc(instructions: []Instruction, output_file_name: string) -> bool {
-    output_file_handle, error := os_open_agnostic(output_file_name, os.O_RDWR | os.O_CREATE | os.O_TRUNC)
+    output_file_handle, error := io.os_open_agnostic(output_file_name, os.O_RDWR | os.O_CREATE | os.O_TRUNC)
     defer os.close(output_file_handle)
 
     if error != os.ERROR_NONE {
@@ -442,16 +442,6 @@ write_operand :: proc(handle: os.Handle, operand: Operand_Data) {
 
 }
 
-@(require_results)
-os_open_agnostic :: proc(path: string, mode: int) -> (os.Handle, os.Error) {
-    when ODIN_OS == .Windows {
-        handle, err := os.open(path, mode)
-    } else {
-        handle, err := os.open(path, mode, os.S_IRUSR | os.S_IWUSR)
-    }
-
-    return handle, err
-}
 
 @(require_results)
 operand_data_to_operand_type :: #force_inline proc(data: Operand_Data) -> (type: Operand_Type) {
