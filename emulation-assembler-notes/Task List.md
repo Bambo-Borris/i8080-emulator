@@ -12,15 +12,15 @@ kanban-plugin: board
 
 ## To Do
 
-- [ ] Create basic CPU emulator that reads and executes binary file output
 - [ ] Begin refactoring code to be specific for the intel 8080
-- [ ] Label extraction
 - [ ] Two pass parsing for assembler to handle labels
+- [ ] Label extraction
 - [ ] CPU Single Step mode
 
 
 ## In Progress
 
+- [ ] Create basic CPU emulator that reads and executes binary file output
 
 
 ## Completed
