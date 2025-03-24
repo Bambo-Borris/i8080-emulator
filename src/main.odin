@@ -12,6 +12,8 @@ import "core:unicode/utf8"
 
 /*
 TODO:
+    (Also refer to sections like @REFACTOR or @SPEED for other potential TODOs)
+
     - Printing assembler errors should be a convenient operation that doesn't require each call site invoking a print
     to manually specify the prefix \"Error\" 
     Bambo 16/03/25
@@ -23,6 +25,13 @@ TODO:
     Bambo 23/03/25
     
 */
+
+CLI_ARGS := [?]string{"f", "o", "d", "h"}
+
+CLI_Args_Data :: struct {
+    arg_idx: int,
+    data:    string,
+}
 
 Opcodes :: enum {
     Load,
@@ -108,23 +117,25 @@ TOKEN_SLOT_ARG1 :: 2
 main :: proc() {
     asm_file_contents: []byte
 
-    for arg, i in os.args {
-        // Consume the first arg, it's the path to the binary
-        // and we don't care about it
-        if i == 0 {
-            continue
-        }
 
-        if strings.contains(arg, ".asm") {
-            err: os2.Error
-            asm_file_contents, err = os2.read_entire_file(arg, context.allocator)
+    cli_args_table := parse_cli_args()
+    if cli_args_table == nil {
+        output_help()
+        return
+    }
 
-            if err != os2.ERROR_NONE {
-                fmt.eprintfln("Error: Unable to open input file %v", arg)
-                os.exit(1)
-            }
+    if "f" not_in cli_args_table {
+        fmt.eprintln("No input file supplied! Try -h flag for help")
+        os.exit(1)
+    }
 
-        }
+
+    err: os2.Error
+    asm_file_contents, err = os2.read_entire_file(cli_args_table["f"].data, context.allocator)
+
+    if err != os2.ERROR_NONE {
+        fmt.eprintfln("Error: Unable to open input file %v", cli_args_table["f"].data)
+        os.exit(1)
     }
 
     tokens := lexer_pass(asm_file_contents)
@@ -153,6 +164,7 @@ generate_mnemonics_array :: proc() -> (mnemonic_array: [OPCODES_COUNT]string) {
 
         mnemonic_array[i] = strings.to_upper(reflect.enum_string(opcode))
     }
+
     return
 }
 
@@ -165,7 +177,7 @@ generate_operand_type_fancy_name :: proc() -> (out: [OPERAND_TYPE_COUNT]string) 
         output, _ := strings.replace(str, "_", " ", -1)
         out[index] = output
     }
-    fmt.println(out)
+
     return
 }
 
@@ -487,3 +499,60 @@ is_hex_valid_rune :: proc(r: rune) -> bool {
     return false
 }
 
+parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data) {
+    is_parsing_arg := false
+
+    for arg, i in os.args {
+        // Consume the first arg, it's the path to the binary
+        // and we don't care about it
+        if i == 0 {
+            continue
+        }
+
+        cliad: CLI_Args_Data
+
+        // @REFACTOR this is really messy with respect to the use of two flags
+        // and there's a cleaner solution for sure.
+        current_parsing_cli_index: int
+        if !is_parsing_arg {
+            if start_rune := arg[0]; start_rune == '-' {
+                trimmed := strings.trim_left(arg, "-")
+
+                found_matching_arg := true
+                for &cli_arg, j in CLI_ARGS {
+                    if cli_arg == trimmed {
+                        is_parsing_arg = true
+                        found_matching_arg = true
+                        cliad.arg_idx = j
+                        cliad.data = arg
+                        current_parsing_cli_index = j
+                        break
+                    }
+                }
+
+                if !found_matching_arg {
+                    fmt.eprintfln("No matching argument for flag -%v! Try --h", arg)
+                    return {}
+                }
+            }
+        } else {
+            out_args_table[CLI_ARGS[current_parsing_cli_index]] = CLI_Args_Data {
+                arg_idx = current_parsing_cli_index,
+                data    = arg,
+            }
+            is_parsing_arg = false
+        }
+
+        // out_args_table[CLI_ARGS[current_parsing_cli_index]] = cliad
+    }
+
+    return
+}
+
+output_help :: proc() {
+    fmt.println("---------------- Available Flags ----------------")
+    fmt.printfln("-f -- Path to assembly file to assemble")
+    fmt.printfln("-o -- Output file path for assembled binary file")
+    fmt.printfln("-d -- Debug tracing in assembler")
+    fmt.printfln("-h -- Output help")
+}

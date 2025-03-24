@@ -33,6 +33,7 @@
                 }
             ],
             "args": [
+                "-f",
                 "test_files/test.asm"
             ]
         }

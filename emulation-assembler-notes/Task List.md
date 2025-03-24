@@ -6,8 +6,8 @@ kanban-plugin: board
 
 ## To Do
 
+- [ ] Document CLI args
 - [ ] Create basic CPU emulator that reads and executes binary file output
-- [ ] Add CLI args to assembler
 - [ ] Add profiling hooks to assembler stages
 - [ ] Add tracking allocator use
 - [ ] Begin refactoring code to be specific for the intel 8080
@@ -15,6 +15,7 @@ kanban-plugin: board
 
 ## In Progress
 
+- [ ] [[CLI Args for parser]]
 
 
 ## Completed
