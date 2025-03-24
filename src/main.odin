@@ -1,6 +1,7 @@
 package i8080
 
 import "core:fmt"
+import "core:log"
 import "core:mem"
 import "core:os"
 import "core:os/os2"
@@ -117,7 +118,6 @@ TOKEN_SLOT_ARG1 :: 2
 main :: proc() {
     asm_file_contents: []byte
 
-
     cli_args_table := parse_cli_args()
     if cli_args_table == nil {
         output_help()
@@ -129,6 +129,13 @@ main :: proc() {
         os.exit(1)
     }
 
+    LOGGER_OPTIONS :: log.Options{.Level, .Terminal_Color, .Short_File_Path, .Line}
+    context.logger = log.create_console_logger(.Debug, LOGGER_OPTIONS)
+    defer log.destroy_console_logger(context.logger)
+
+    if "d" not_in cli_args_table {
+        context.logger.lowest_level = .Fatal
+    }
 
     err: os2.Error
     asm_file_contents, err = os2.read_entire_file(cli_args_table["f"].data, context.allocator)
@@ -140,12 +147,12 @@ main :: proc() {
 
     tokens := lexer_pass(asm_file_contents)
     defer delete(tokens)
-    fmt.printfln("Tokens found: %v", tokens)
+    log.debugf("Tokens found: %v", tokens)
 
     instructions, ok := parse_instructions(tokens[:])
     defer delete(instructions)
 
-    fmt.printfln("Valid instructions extracted: %v", instructions)
+    log.debugf("Valid instructions extracted: %v", instructions)
 
     ok = write_binary_output(instructions[:])
 
@@ -153,7 +160,7 @@ main :: proc() {
         os.exit(1)
     }
 
-    fmt.printfln("Instructions parsed: %v", instructions)
+    log.debugf("Instructions parsed: %v", instructions)
 }
 
 generate_mnemonics_array :: proc() -> (mnemonic_array: [OPCODES_COUNT]string) {
@@ -315,10 +322,10 @@ convert_arg_string_to_operand :: proc(
     // to do some very simple validation checks and the complexity of this loop vanishes.
 
     for allowed_arg_type in arg_info {
-        fmt.println("Allowed args type", allowed_arg_type)
+        log.debug("Allowed args type", allowed_arg_type)
         switch allowed_arg_type {
         case .Register:
-            fmt.println("Checking arg string", arg_string, "is", allowed_arg_type)
+            log.debug("Checking arg string", arg_string, "is", allowed_arg_type)
             uppercase_register_name := strings.to_upper(arg_string, context.temp_allocator)
             register_enum_value, found_correct_enum_value := reflect.enum_from_name(Registers, uppercase_register_name)
             if found_correct_enum_value {
@@ -380,7 +387,7 @@ convert_arg_string_to_operand :: proc(
             // Use arg string since the format 0x000 is read properly by atoi
             as_integer := strconv.atoi(arg_string)
             if as_integer > cast(int)max(u16) {
-                fmt.printfln("Error: Argument '%v' on line %v exceeds maximum integer size of %v", arg_string, line_number, max(u8))
+                fmt.eprintfln("Error: Argument '%v' on line %v exceeds maximum integer size of %v", arg_string, line_number, max(u8))
                 break
             }
 
@@ -542,8 +549,6 @@ parse_cli_args :: proc() -> (out_args_table: map[string]CLI_Args_Data) {
             }
             is_parsing_arg = false
         }
-
-        // out_args_table[CLI_ARGS[current_parsing_cli_index]] = cliad
     }
 
     return
