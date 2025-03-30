@@ -16,11 +16,11 @@ kanban-plugin: board
 - [ ] Two pass parsing for assembler to handle labels
 - [ ] Label extraction
 - [ ] CPU Single Step mode
+- [ ] Create basic CPU emulator that reads and executes binary file output
 
 
 ## In Progress
 
-- [ ] Create basic CPU emulator that reads and executes binary file output
 
 
 ## Completed
