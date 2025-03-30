@@ -10,11 +10,16 @@ kanban-plugin: board
 - [ ] Add tracking allocator use
 
 
+## Previous Assembler Tasklist
+
+- [ ] Label extraction
+- [ ] Two pass parsing for assembler to handle labels
+- [ ] Begin refactoring code to be specific for the intel 8080
+
+
 ## To Do
 
-- [ ] Begin refactoring code to be specific for the intel 8080
-- [ ] Two pass parsing for assembler to handle labels
-- [ ] Label extraction
+- [ ] Remake assembler
 - [ ] CPU Single Step mode
 - [ ] Create basic CPU emulator that reads and executes binary file output
 
@@ -40,6 +45,6 @@ kanban-plugin: board
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false,false]}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false,false]}
 ```
 %%
