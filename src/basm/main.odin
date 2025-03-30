@@ -6,10 +6,24 @@ import "core:log"
 import "core:os"
 import "core:strings"
 
+Tokens :: struct {
+    // Generated during lexing
+    label:    string,
+    mnemonic: string,
+    arg0:     string,
+    arg1:     string,
+    comment:  string,
+    line_num: int,
+
+    // Posted during opcode decoding
+    offset:   int,
+}
+
 Assembler_State :: struct {
     output_file_name:    string,
     input_file_name:     string,
     input_file_contents: []byte,
+    extracted_tokens:    [dynamic]Tokens,
 }
 
 CLI_ARGS := [?]string{"f", "o", "d", "h"}
@@ -52,6 +66,10 @@ main :: proc() {
 
     if !load_input_file(&assembler_state) {
         fmt.printfln("Error: Unable to open input file path: %v", assembler_state.input_file_name)
+        os.exit(1)
+    }
+
+    if !lexer_pass(&assembler_state) {
         os.exit(1)
     }
 }
@@ -120,7 +138,15 @@ load_input_file :: proc(asm_state: ^Assembler_State) -> (ok: bool) {
     return
 }
 
-lexer_pass :: proc() {
+lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
+    file_as_string := strings.clone_from_bytes(asm_state.input_file_contents, context.temp_allocator)
+    defer {
+        free_all(context.temp_allocator)
+    }
 
+    lines := strings.split_lines(file_as_string, context.temp_allocator)
+    log.debug(lines)
+
+    return true
 }
 
