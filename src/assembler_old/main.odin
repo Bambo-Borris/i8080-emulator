@@ -126,7 +126,6 @@ main :: proc() {
         os.exit(1)
     }
 
-
     if "f" not_in cli_args_table {
         fmt.eprintln("No input file supplied! Try -h flag for help")
         os.exit(1)
@@ -560,3 +559,4 @@ output_help :: proc() {
     fmt.printfln("-d -- Debug tracing in assembler")
     fmt.printfln("-h -- Output help")
 }
+

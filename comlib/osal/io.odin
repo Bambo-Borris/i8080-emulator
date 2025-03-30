@@ -1,4 +1,4 @@
-package comlib
+package osal
 
 import "core:os"
 
@@ -12,3 +12,4 @@ os_open_agnostic :: proc(path: string, mode: int) -> (os.Handle, os.Error) {
 
     return handle, err
 }
+

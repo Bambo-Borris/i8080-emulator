@@ -13,4 +13,4 @@ $debugFlags = @(
     '-o:none'
 )
 
-odin build "src/basm" @commonFlags @debugFlags -out:"build/basm.exe" -build-mode:exe -debug 
+odin build "src/basm" @commonFlags @debugFlags -out:"build/basm.exe" -build-mode:exe -debug -collection:comlib=comlib/ 
