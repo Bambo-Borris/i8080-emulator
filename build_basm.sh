@@ -14,4 +14,4 @@ debugFlags=(
     "-o:none"
 )
 
-odin build "src/assembler" "${commonFlags[@]}" "${debugFlags[@]}" -out:"build/asm" -build-mode:exe -debug -collection:comlib=comlib/
+odin build "src/basm" "${commonFlags[@]}" "${debugFlags[@]}" -out:"build/basm" -build-mode:exe -debug -collection:comlib=comlib/
