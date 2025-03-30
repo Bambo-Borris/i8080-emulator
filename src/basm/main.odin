@@ -10,7 +10,6 @@ Assembler_State :: struct {
     output_file_name:    string,
     input_file_name:     string,
     input_file_contents: []byte,
-    debug_log:           bool,
 }
 
 CLI_ARGS := [?]string{"f", "o", "d", "h"}
@@ -51,6 +50,10 @@ main :: proc() {
     assembler_state.output_file_name = cli_args_table["o"].data
     assembler_state.input_file_name = cli_args_table["f"].data
 
+    if !load_input_file(&assembler_state) {
+        fmt.printfln("Error: Unable to open input file path: %v", assembler_state.input_file_name)
+        os.exit(1)
+    }
 }
 
 @(require_results)
@@ -109,5 +112,15 @@ output_help :: proc() {
     fmt.printfln("-o -- Output file path for assembled binary file")
     fmt.printfln("-d -- Debug tracing in assembler")
     fmt.printfln("-h -- Output help")
+}
+
+load_input_file :: proc(asm_state: ^Assembler_State) -> (ok: bool) {
+    assert(asm_state != nil)
+    asm_state.input_file_contents, ok = os.read_entire_file(asm_state.input_file_name)
+    return
+}
+
+lexer_pass :: proc() {
+
 }
 
