@@ -155,11 +155,12 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
 
         // We'll process left->right across the line, trimming unneccessary spaces where
         // required. we are looking for:
-        // [optional label] [mnemonic or directive] [operands?] [; comment?]
+        // [optional label] [mnemonic or directive] [operands a], [operand_b] [; comment?]
 
         // Trim whole line left/right spaces
         trimmed_line := strings.trim_space(line)
         token: Token
+        token.line_num = line_num
 
         // If there's a label marker ':', then we shall try tokenize a label
         if strings.contains_rune(trimmed_line, ':') {
@@ -183,16 +184,59 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
             }
         }
 
+        if strings.contains_rune(trimmed_line, ';') {
+            line_split_semi_colon, alloc_err := strings.split(trimmed_line, ";", context.temp_allocator)
+
+            if alloc_err != .None {
+                panic("IAE: Unable to allocate split strings for lexer stage")
+            }
+
+            log.debug("Split for comment marker: len =", len(line_split_semi_colon), "data =", line_split_semi_colon)
+
+            assert(len(line_split_semi_colon) == 2)
+            token.comment = line_split_semi_colon[1]
+        }
 
         append(&asm_state.extracted_tokens, token)
     }
 
-
-    log.info("Tokens extracted:\n", asm_state.extracted_tokens)
-
+    output_reassembled_line_from_tokens(asm_state.extracted_tokens[:])
     return true
 }
 
 output_syntax_error :: proc(line_number: int, error_string: string) {
     fmt.printfln("Error! Line %v, %v", line_number, error_string)
 }
+
+output_reassembled_line_from_tokens :: proc(tokens: []Token) {
+    log.info("Tokens extracted:\n", tokens)
+
+    // @TODO Reassemble source file from tokens data
+    // for &t in tokens {
+    //     label_str := ""
+    //     // mnemonic_str := ""
+    //     // operand_0_str := ""
+    //     // operand_1_str := ""
+    //     comment_str := ""
+
+    //     if t.label != "" {
+    //         label_str = fmt.tprintf("%v:", t.label)
+    //     }
+
+    //     // if t.mnemonic != "" {
+    //     //     mnemonic_str = t.mnemonic
+    //     // }
+
+    //     if t.comment != "" {
+    //         comment_str = fmt.tprintf("; %v", t.comment)
+    //     }
+
+    //     if t.arg1 != "" {
+    //         log.infof("Line %v: %v %v %v, %v %v", t.line_num, label_str, mnemonic_str, operand_0_str, operand_1_str, comment_str)
+    //     } else if t.arg0 != "" {
+    //         log.infof("Line %v: %v %v %v, %v %v", t.line_num, label_str, mnemonic_str, operand_0_str, operand_1_str, comment_str)
+    //     } else {
+    //     }
+    // }
+}
+
