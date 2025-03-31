@@ -145,7 +145,6 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
     }
 
     lines := strings.split_lines(file_as_string, context.temp_allocator)
-    log.debug(lines)
 
     asm_state.extracted_tokens = make([dynamic]Token)
 
@@ -162,37 +161,35 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
         token: Token
         token.line_num = line_num
 
-        // If there's a label marker ':', then we shall try tokenize a label
-        if strings.contains_rune(trimmed_line, ':') {
-            line_split_colon, alloc_err := strings.split(trimmed_line, ":", context.temp_allocator)
+        label_split, alloc_err := strings.split(trimmed_line, ":", context.temp_allocator)
+        after_label_str: string
 
-            if alloc_err != .None {
-                panic("IAE: Unable to allocate split strings for lexer stage")
-            }
-
-            label_rune_count := strings.rune_count(line_split_colon[0])
+        // There's only a label if the length of this array is > 1, as an len(empty split) == 1
+        if len(label_split) > 1 {
+            label_string := label_split[0]
+            label_rune_count := strings.rune_count(label_string)
 
             if label_rune_count <= 5 {
-                log.debug("Valid label length of <=5 found :", line_split_colon[0])
-                token.label = strings.clone(line_split_colon[0])
+                token.label = strings.clone(label_string)
             } else if label_rune_count == 0 {
                 output_syntax_error(line_num, "invalid label, must be between 1 and 5 characters in length")
             } else {
-                err_str := fmt.tprintfln("label '%v' is more than 5 characters in length!", line_split_colon[0])
+                err_str := fmt.tprintfln("label '%v' is more than 5 characters in length!", label_string)
                 output_syntax_error(line_num, err_str)
                 return false
             }
+            after_label_str = label_split[1]
+        } else {
+            after_label_str = label_split[0]
         }
 
         if strings.contains_rune(trimmed_line, ';') {
-            line_split_semi_colon, alloc_err := strings.split(trimmed_line, ";", context.temp_allocator)
+            line_split_semi_colon: []string
+            line_split_semi_colon, alloc_err = strings.split(trimmed_line, ";", context.temp_allocator)
 
             if alloc_err != .None {
                 panic("IAE: Unable to allocate split strings for lexer stage")
             }
-
-            log.debug("Split for comment marker: len =", len(line_split_semi_colon), "data =", line_split_semi_colon)
-
             assert(len(line_split_semi_colon) == 2)
             token.comment = line_split_semi_colon[1]
         }
@@ -209,7 +206,9 @@ output_syntax_error :: proc(line_number: int, error_string: string) {
 }
 
 output_reassembled_line_from_tokens :: proc(tokens: []Token) {
-    log.info("Tokens extracted:\n", tokens)
+    for &token in tokens {
+        log.info(token)
+    }
 
     // @TODO Reassemble source file from tokens data
     // for &t in tokens {
