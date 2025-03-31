@@ -183,15 +183,39 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
             after_label_str = label_split[0]
         }
 
-        if strings.contains_rune(trimmed_line, ';') {
+        // To identify the first mnemonic we first trim (since it's likely the user placed a space between the label: mnemonic
+        // syntax, if they didn't we still get a valid result anyway.) This trimmed form then can be split again on the space character,
+
+        after_label_str = strings.trim_left_space(after_label_str)
+
+        if strings.contains_rune(after_label_str, ';') {
             line_split_semi_colon: []string
-            line_split_semi_colon, alloc_err = strings.split(trimmed_line, ";", context.temp_allocator)
+            line_split_semi_colon, alloc_err = strings.split(after_label_str, ";", context.temp_allocator)
 
             if alloc_err != .None {
                 panic("IAE: Unable to allocate split strings for lexer stage")
             }
+
             assert(len(line_split_semi_colon) == 2)
             token.comment = line_split_semi_colon[1]
+            after_label_str = line_split_semi_colon[0]
+        }
+
+        mnemonic_string: string
+
+        // Beware this may break with a tab character
+        space_idx := strings.index_rune(after_label_str, ' ')
+        if space_idx >= 0 {
+            mnemonic_string, _ = strings.substring_to(after_label_str, space_idx)
+            log.debug(mnemonic_string)
+
+            if strings.rune_count(mnemonic_string) < 2 {
+                err_str := fmt.tprintfln("invalid mnemonic length '%v' is too short to be a valid mnemonic!", mnemonic_string)
+                output_syntax_error(line_num, err_str)
+                return false
+            }
+
+            token.mnemonic = strings.clone(mnemonic_string)
         }
 
         append(&asm_state.extracted_tokens, token)
