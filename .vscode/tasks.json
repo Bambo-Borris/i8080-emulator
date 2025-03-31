@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cd ${workspaceFolder} && ./build.sh",
+            "command": "cd ${workspaceFolder} && ./build_basm.sh",
             "group": "build"
         },
         {

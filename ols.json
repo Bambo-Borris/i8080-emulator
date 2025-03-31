@@ -1,7 +1,9 @@
 {
+  "enable_references": true,
   "collections": [
     {
-      "name": "comlib", "path": "comlib/"
+      "name": "comlib",
+      "path": "comlib/"
     }
   ]
 }

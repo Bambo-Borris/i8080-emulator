@@ -1,13 +1,7 @@
-; Check load
-load b, 20 ; Check inline comment
-load a, 0x50
-
-; Check Add
-add a, 1
-add b, 2
-
-; Check store
-; Leave these commented out for now as store
-; will require us to validate u16 vs u8 bytes
-store a, 0x20A
-store b, 0x300
+; Test asm file
+BEGIN:                    ; Test case
+        ORG    0x0100
+        MVI    A, 0x05    ; Load 5 into A
+LOOP:   DCR    A          ; Decrement A
+        JNZ    LOOP       ; If not zero, jump back
+        HLT               ; Halt when A == 0

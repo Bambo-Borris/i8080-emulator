@@ -6,7 +6,7 @@ import "core:log"
 import "core:os"
 import "core:strings"
 
-Tokens :: struct {
+Token :: struct {
     // Generated during lexing
     label:    string,
     mnemonic: string,
@@ -23,7 +23,7 @@ Assembler_State :: struct {
     output_file_name:    string,
     input_file_name:     string,
     input_file_contents: []byte,
-    extracted_tokens:    [dynamic]Tokens,
+    extracted_tokens:    [dynamic]Token,
 }
 
 CLI_ARGS := [?]string{"f", "o", "d", "h"}
@@ -147,6 +147,52 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
     lines := strings.split_lines(file_as_string, context.temp_allocator)
     log.debug(lines)
 
+    asm_state.extracted_tokens = make([dynamic]Token)
+
+    for &line, index in lines {
+        line_num := index + 1
+        _ = line_num
+
+        // We'll process left->right across the line, trimming unneccessary spaces where
+        // required. we are looking for:
+        // [optional label] [mnemonic or directive] [operands?] [; comment?]
+
+        // Trim whole line left/right spaces
+        trimmed_line := strings.trim_space(line)
+        token: Token
+
+        // If there's a label marker ':', then we shall try tokenize a label
+        if strings.contains_rune(trimmed_line, ':') {
+            line_split_colon, alloc_err := strings.split(trimmed_line, ":", context.temp_allocator)
+
+            if alloc_err != .None {
+                panic("IAE: Unable to allocate split strings for lexer stage")
+            }
+
+            label_rune_count := strings.rune_count(line_split_colon[0])
+
+            if label_rune_count <= 5 {
+                log.debug("Valid label length of <=5 found :", line_split_colon[0])
+                token.label = strings.clone(line_split_colon[0])
+            } else if label_rune_count == 0 {
+                output_syntax_error(line_num, "invalid label, must be between 1 and 5 characters in length")
+            } else {
+                err_str := fmt.tprintfln("label '%v' is more than 5 characters in length!", line_split_colon[0])
+                output_syntax_error(line_num, err_str)
+                return false
+            }
+        }
+
+
+        append(&asm_state.extracted_tokens, token)
+    }
+
+
+    log.info("Tokens extracted:\n", asm_state.extracted_tokens)
+
     return true
 }
 
+output_syntax_error :: proc(line_number: int, error_string: string) {
+    fmt.printfln("Error! Line %v, %v", line_number, error_string)
+}
