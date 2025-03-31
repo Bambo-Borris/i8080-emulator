@@ -149,6 +149,11 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
     asm_state.extracted_tokens = make([dynamic]Token)
 
     for &line, index in lines {
+        // Don't process empty lines
+        if len(line) == 0 {
+            continue
+        }
+
         line_num := index + 1
         _ = line_num
 
@@ -160,6 +165,9 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
         trimmed_line := strings.trim_space(line)
         token: Token
         token.line_num = line_num
+        defer {
+            append(&asm_state.extracted_tokens, token)
+        }
 
         label_split, alloc_err := strings.split(trimmed_line, ":", context.temp_allocator)
         after_label_str: string
@@ -207,7 +215,7 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
         space_idx := strings.index_rune(after_label_str, ' ')
         if space_idx >= 0 {
             mnemonic_string, _ = strings.substring_to(after_label_str, space_idx)
-            log.debug(mnemonic_string)
+            // log.debug(mnemonic_string)
 
             if strings.rune_count(mnemonic_string) < 2 {
                 err_str := fmt.tprintfln("invalid mnemonic length '%v' is too short to be a valid mnemonic!", mnemonic_string)
@@ -216,9 +224,43 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
             }
 
             token.mnemonic = strings.clone(mnemonic_string)
+        } else {
+            // We can only get here if this is a label + comment, or label only or comment only
+            continue
         }
 
-        append(&asm_state.extracted_tokens, token)
+        // Now analyse the middle section for the arguments (there may be none)
+        args_combined_str, _ := strings.substring_from(after_label_str, space_idx)
+        args_combined_str = strings.trim_right_space(args_combined_str)
+
+        if len(args_combined_str) == 0 {
+            continue
+        }
+
+        comma_split: []string
+        comma_split, alloc_err = strings.split(args_combined_str, ",", context.temp_allocator)
+        if alloc_err != .None {
+            panic("IAE: Unable to allocate split strings for lexer stage")
+        }
+
+        arg0_str := comma_split[0]
+        arg0_str = strings.trim_space(arg0_str)
+
+        if len(arg0_str) > 0 {
+            token.arg0 = strings.clone(arg0_str)
+        }
+
+        // There's only a second arg if the comma_split length > 0
+        if len(comma_split) > 1 {
+            arg1_str := comma_split[1]
+            arg1_str = strings.trim_space(arg1_str)
+
+            if len(arg1_str) > 0 {
+                token.arg1 = strings.clone(arg1_str)
+            }
+        }
+
+        log.debug("Middle portion of line", line_num, args_combined_str, "which was originally", line)
     }
 
     output_reassembled_line_from_tokens(asm_state.extracted_tokens[:])

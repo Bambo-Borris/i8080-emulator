@@ -20,6 +20,7 @@ odin build "src/basm" @commonFlags @debugFlags -out:"build/basm.exe" -build-mode
 
 if ($lastExitCode -ne 0){ 
     Write-Output "Build failed"
+    Exit
 }
 
 if ($arg0 -eq "run") {
