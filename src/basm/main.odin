@@ -169,6 +169,12 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
             append(&asm_state.extracted_tokens, token)
         }
 
+        // Special case to handle comment starting lines
+        if strings.index_rune(trimmed_line, ';') == 0 {
+            token.comment = strings.clone(trimmed_line)
+            continue
+        }
+
         label_split, alloc_err := strings.split(trimmed_line, ":", context.temp_allocator)
         after_label_str: string
 
