@@ -27,11 +27,19 @@ Token :: struct {
     offset:   int,
 }
 
+Instruction :: struct {
+    offset:      int,
+    byte_length: int,
+    token_index: int,
+    data:        []byte,
+}
+
 Assembler_State :: struct {
     output_file_name:    string,
     input_file_name:     string,
     input_file_contents: []byte,
     extracted_tokens:    [dynamic]Token,
+    instructions:        [dynamic]Instruction,
 }
 
 CLI_ARGS := [?]string{"f", "o", "d", "h"}
