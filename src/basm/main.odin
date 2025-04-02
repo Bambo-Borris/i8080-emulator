@@ -80,6 +80,10 @@ main :: proc() {
     if !lexer_pass(&assembler_state) {
         os.exit(1)
     }
+
+    if !parser_pass(&assembler_state) {
+        os.exit(1)
+    }
 }
 
 @(require_results)
@@ -319,3 +323,15 @@ output_reassembled_line_from_tokens :: proc(tokens: []Token) {
     // }
 }
 
+parser_pass :: proc(asm_state: ^Assembler_State) -> bool {
+    for &token in asm_state.extracted_tokens {
+        // We have no token, and no label and just a comment,
+        // we ignore comments
+        if len(token.label) == 0 && len(token.mnemonic) == 0 && len(token.comment) != 0 {
+            log.debug("Comment only at line ", token.line_num)
+            continue
+        }
+    }
+
+    return true
+}
