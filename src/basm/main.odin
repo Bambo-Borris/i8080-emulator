@@ -32,6 +32,24 @@ Instruction :: struct {
     byte_length: int,
     token_index: int,
     data:        []byte,
+    type:        Instruction_Type,
+}
+
+Instruction_Type :: enum {
+    Unknown,
+    Standard,
+    Pseudo,
+    Data,
+}
+
+Symbol_Type :: enum {
+    Label,
+}
+
+Symbol :: struct {
+    name:        string,
+    token_index: int,
+    type:        Symbol_Type,
 }
 
 Assembler_State :: struct {
@@ -40,6 +58,7 @@ Assembler_State :: struct {
     input_file_contents: []byte,
     extracted_tokens:    [dynamic]Token,
     instructions:        [dynamic]Instruction,
+    symbols:             [dynamic]Symbol,
 }
 
 CLI_ARGS := [?]string{"f", "o", "d", "h"}
@@ -75,6 +94,8 @@ main :: proc() {
     if "d" not_in cli_args_table {
         context.logger.lowest_level = .Fatal
     }
+
+    setup_instructions_maps()
 
     assembler_state: Assembler_State
     assembler_state.output_file_name = cli_args_table["o"].data
@@ -298,6 +319,7 @@ output_syntax_error :: proc(line_number: int, error_string: string) {
 }
 
 output_reassembled_line_from_tokens :: proc(tokens: []Token) {
+    log.info("Lexer pass complete, tokens output for parsing is:")
     for &token in tokens {
         log.info(token)
     }
@@ -332,14 +354,41 @@ output_reassembled_line_from_tokens :: proc(tokens: []Token) {
 }
 
 parser_pass :: proc(asm_state: ^Assembler_State) -> bool {
-    for &token in asm_state.extracted_tokens {
+    emit_symbol :: proc(asm_state: ^Assembler_State, symbol: Symbol) {
+        append(&asm_state.symbols, symbol)
+        log.debug("Emitting symbol", asm_state.symbols[len(asm_state.symbols) - 1])
+    }
+
+    for &token, index in asm_state.extracted_tokens {
         // We have no token, and no label and just a comment,
         // we ignore comments
         if len(token.label) == 0 && len(token.mnemonic) == 0 && len(token.comment) != 0 {
             log.debug("Comment only at line ", token.line_num)
             continue
+        } else if len(token.label) > 0 && len(token.mnemonic) == 0 {
+            log.debug("Label only line", token.line_num)
+            emit_symbol(asm_state, Symbol{name = token.label, token_index = index, type = .Label})
+            continue
         }
+
+        instruction := Instruction {
+            type = .Unknown,
+        }
+
+        if token.mnemonic in STANDARD_INSTRUCTION_STRINGS_MAP {
+            instruction.type = .Standard
+        } else if token.mnemonic in PSEUDO_INSTRUCTIONS_STRING_MAP {
+            instruction.type = .Pseudo
+        }
+
+        // If we have a label on a line
+        if len(token.label) > 0 {
+            emit_symbol(asm_state, Symbol{name = token.label, token_index = index, type = .Label})
+        }
+
+        log.debug("Instruction type is", instruction.type, "for line", token.line_num, "with mnemonic", token.mnemonic)
     }
 
     return true
 }
+
