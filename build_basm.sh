@@ -35,7 +35,7 @@ else
 fi
 
 if [ "$arg1" == "run" ] || [ "$arg0" == "run" ]; then
-    # "$exeName" "-f" "./test_files/test.asm" "-o" "test.o" "-d"
+    "$exeName" "-f" "./test_files/test.asm" "-o" "test.o" "-d"
     # "$exeName" "-f" "./test_files/test_2.asm" "-o" "test.o" "-d"
-    "$exeName" "-f" "./test_files/test_3.asm" "-o" "test.o" "-d"
+    # "$exeName" "-f" "./test_files/test_3.asm" "-o" "test.o" "-d"
 fi

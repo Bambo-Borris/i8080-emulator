@@ -14,7 +14,7 @@ Open terminal and do:
 ./build.sh # Linux
 ```
 
-# How to use Assmebler
+# How to use Assembler
 
 ```
 # To assemble a file

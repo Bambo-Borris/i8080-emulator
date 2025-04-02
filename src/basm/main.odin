@@ -4,6 +4,7 @@ package basm
 import "core:fmt"
 import "core:log"
 import "core:os"
+import "core:reflect"
 import "core:strings"
 
 /*
@@ -95,7 +96,7 @@ main :: proc() {
         context.logger.lowest_level = .Fatal
     }
 
-    setup_instructions_maps()
+    build_opcode_table()
 
     assembler_state: Assembler_State
     assembler_state.output_file_name = cli_args_table["o"].data
@@ -375,11 +376,12 @@ parser_pass :: proc(asm_state: ^Assembler_State) -> bool {
             type = .Unknown,
         }
 
-        if token.mnemonic in STANDARD_INSTRUCTION_STRINGS_MAP {
+        if _, is_mnemonic := reflect.enum_from_name(Mnemonics, token.mnemonic); is_mnemonic {
             instruction.type = .Standard
-        } else if token.mnemonic in PSEUDO_INSTRUCTIONS_STRING_MAP {
+        } else if _, is_pseudo := reflect.enum_from_name(Pseudo_Instruction, token.mnemonic); is_pseudo {
             instruction.type = .Pseudo
         }
+
 
         // If we have a label on a line
         if len(token.label) > 0 {
@@ -391,4 +393,3 @@ parser_pass :: proc(asm_state: ^Assembler_State) -> bool {
 
     return true
 }
-
