@@ -21,8 +21,11 @@ debugFlags=(
 
 # Set the name of the game executable (omitting Windows-specific .exe)
 exeName="build/basm"
-
-odin build "src/basm" "${commonFlags[@]}" "${debugFlags[@]}" -out:"build/basm" -build-mode:exe -debug -collection:comlib=comlib/
+if [ "$arg0" != "test" ]; then
+    odin build "src/basm" "${commonFlags[@]}" "${debugFlags[@]}" -out:"build/basm" -build-mode:exe -debug -collection:comlib=comlib/
+else
+    odin test "src/basm/" -define:ODIN_TEST_FANCY=false -define:ODIN_TEST_SHORT_LOGS=true -out:"build/basm" -collection:comlib=comlib/ 
+fi
 
 if [ $? -ne 0 ]; then
     echo "Build command failed!"
@@ -32,7 +35,7 @@ else
 fi
 
 if [ "$arg1" == "run" ] || [ "$arg0" == "run" ]; then
-    "$exeName" "-f" "./test_files/test.asm" "-o" "test.o" "-d"
+    # "$exeName" "-f" "./test_files/test.asm" "-o" "test.o" "-d"
     # "$exeName" "-f" "./test_files/test_2.asm" "-o" "test.o" "-d"
-    # "$exeName" "-f" "./test_files/test_3.asm" "-o" "test.o" "-d"
+    "$exeName" "-f" "./test_files/test_3.asm" "-o" "test.o" "-d"
 fi

@@ -20,7 +20,7 @@ $debugFlags = @(
 if ($arg0 -ne "test") {
     odin build "src/basm" @commonFlags @debugFlags -out:"build/basm.exe" -build-mode:exe -debug -collection:comlib=comlib/
 } else {
-    odin test .\src\basm\ -define:ODIN_TEST_FANCY=false -define:ODIN_TEST_SHORT_LOGS=true -out:"build/basm.exe" -collection:comlib=comlib/ 
+    odin test "src/basm/" -define:ODIN_TEST_FANCY=false -define:ODIN_TEST_SHORT_LOGS=true -out:"build/basm.exe" -collection:comlib=comlib/ 
 }
 
 if ($lastExitCode -ne 0){ 
