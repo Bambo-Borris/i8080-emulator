@@ -16,7 +16,12 @@ $commonFlags = @(
 $debugFlags = @( 
     '-o:none'
 )
-odin build "src/basm" @commonFlags @debugFlags -out:"build/basm.exe" -build-mode:exe -debug -collection:comlib=comlib/ 
+
+if ($arg0 -ne "test") {
+    odin build "src/basm" @commonFlags @debugFlags -out:"build/basm.exe" -build-mode:exe -debug -collection:comlib=comlib/
+} else {
+    odin test .\src\basm\ -define:ODIN_TEST_FANCY=false -define:ODIN_TEST_SHORT_LOGS=true -out:"build/basm.exe" -collection:comlib=comlib/ 
+}
 
 if ($lastExitCode -ne 0){ 
     Write-Output "Build failed"
@@ -24,7 +29,7 @@ if ($lastExitCode -ne 0){
 }
 
 if ($arg0 -eq "run") {
-    .\build\basm.exe -f .\test_files\test.asm -o test.o -d 
+    # .\build\basm.exe -f .\test_files\test.asm -o test.o -d 
     # .\build\basm.exe -f .\test_files\test_2.asm -o test.o -d 
-    # .\build\basm.exe -f .\test_files\test_3.asm -o test.o -d 
+    .\build\basm.exe -f .\test_files\test_3.asm -o test.o -d 
 }

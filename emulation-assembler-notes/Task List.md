@@ -22,6 +22,7 @@ kanban-plugin: board
 - [ ] Remake assembler
 - [ ] CPU Single Step mode
 - [ ] Create basic CPU emulator that reads and executes binary file output
+- [ ] Setup some unit testing
 
 
 ## In Progress

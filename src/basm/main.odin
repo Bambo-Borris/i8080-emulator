@@ -219,7 +219,7 @@ lexer_pass :: proc(asm_state: ^Assembler_State) -> bool {
             }
 
             assert(len(line_split_semi_colon) == 2)
-            token.comment = line_split_semi_colon[1]
+            token.comment = strings.clone(line_split_semi_colon[1])
             after_label_str = line_split_semi_colon[0]
         }
 
