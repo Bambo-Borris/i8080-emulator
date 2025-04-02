@@ -6,6 +6,14 @@ import "core:log"
 import "core:os"
 import "core:strings"
 
+/*
+TODO:
+    - Lexing pass currently only accounts for generating tokens with 2 optional arguments, however
+    some assembly instructions are source influencing only and they may have > 2 arguments depending
+    on use.
+    Bambo 02/04/25
+*/
+
 Token :: struct {
     // Generated during lexing
     label:    string,
