@@ -176,6 +176,7 @@ Operand_Type :: enum {
     SP,
     Byte,
     Word,
+    Address,
 }
 
 Opcode :: struct {
@@ -440,6 +441,134 @@ build_opcode_table :: proc() {
     OPCODE_TABLE[0x1F] = Opcode {
         mnemonic  = .MVI,
         length    = 2,
+        operand_a = .None,
+        operand_b = .None,
+    }
+
+    // NOP
+    OPCODE_TABLE[0x20] = Opcode {
+        mnemonic  = .NOP,
+        length    = 1,
+        operand_a = .None,
+        operand_b = .None,
+    }
+
+    // LXI H, d16
+    OPCODE_TABLE[0x21] = Opcode {
+        mnemonic  = .LXI,
+        length    = 3,
+        operand_a = .Register_D,
+        operand_b = .None,
+    }
+
+    // SHLD a16
+    OPCODE_TABLE[0x22] = Opcode {
+        mnemonic  = .SHLD,
+        length    = 3,
+        operand_a = .Address,
+        operand_b = .None,
+    }
+
+    // INX H
+    OPCODE_TABLE[0x23] = Opcode {
+        mnemonic  = .INX,
+        length    = 1,
+        operand_a = .Register_H,
+        operand_b = .None,
+    }
+
+    // INR H
+    OPCODE_TABLE[0x24] = Opcode {
+        mnemonic  = .INR,
+        length    = 1,
+        operand_a = .Register_H,
+        operand_b = .None,
+    }
+
+    // DCR H
+    OPCODE_TABLE[0x25] = Opcode {
+        mnemonic  = .DCR,
+        length    = 1,
+        operand_a = .Register_H,
+        operand_b = .None,
+    }
+
+    // MVI H, d8
+    OPCODE_TABLE[0x26] = Opcode {
+        mnemonic  = .MVI,
+        length    = 2,
+        operand_a = .Register_H,
+        operand_b = .Byte,
+    }
+
+    // DAA
+    OPCODE_TABLE[0x27] = Opcode {
+        mnemonic  = .DAA,
+        length    = 1,
+        operand_a = .Register_H,
+        operand_b = .None,
+    }
+
+    // NOP
+    OPCODE_TABLE[0x28] = Opcode {
+        mnemonic  = .NOP,
+        length    = 1,
+        operand_a = .None,
+        operand_b = .None,
+    }
+
+    // DAD H
+    OPCODE_TABLE[0x29] = Opcode {
+        mnemonic  = .DAD,
+        length    = 1,
+        operand_a = .None,
+        operand_b = .None,
+    }
+
+    // LHLD a16
+    OPCODE_TABLE[0x2A] = Opcode {
+        mnemonic  = .LHLD,
+        length    = 3,
+        operand_a = .Address,
+        operand_b = .None,
+    }
+
+    // DCX H
+    OPCODE_TABLE[0x2B] = Opcode {
+        mnemonic  = .DCX,
+        length    = 1,
+        operand_a = .Register_H,
+        operand_b = .None,
+    }
+
+    // INR L
+    OPCODE_TABLE[0x2C] = Opcode {
+        mnemonic  = .INR,
+        length    = 1,
+        operand_a = .Register_L,
+        operand_b = .None,
+    }
+
+    // DCR L
+    OPCODE_TABLE[0x2D] = Opcode {
+        mnemonic  = .DCR,
+        length    = 1,
+        operand_a = .Register_L,
+        operand_b = .None,
+    }
+
+    // MVI L, d8
+    OPCODE_TABLE[0x2E] = Opcode {
+        mnemonic  = .MVI,
+        length    = 2,
+        operand_a = .Register_L,
+        operand_b = .Byte,
+    }
+
+    // CMA
+    OPCODE_TABLE[0x2F] = Opcode {
+        mnemonic  = .CMA,
+        length    = 1,
         operand_a = .None,
         operand_b = .None,
     }
