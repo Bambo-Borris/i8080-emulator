@@ -827,7 +827,135 @@ build_opcode_table :: proc() {
     OPCODE_TABLE[0x4F] = Opcode {
         mnemonic  = .MOV,
         length    = 1,
-        operand_a = .Register_B,
+        operand_a = .Register_C,
+        operand_b = .Register_A,
+    }
+
+    // MOV D, B
+    OPCODE_TABLE[0x50] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_B,
+    }
+
+    // MOV D, C
+    OPCODE_TABLE[0x51] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_C,
+    }
+
+    // MOV D, D
+    OPCODE_TABLE[0x52] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_D,
+    }
+
+    // MOV D, E
+    OPCODE_TABLE[0x53] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_E,
+    }
+
+    // MOV D, H
+    OPCODE_TABLE[0x54] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_H,
+    }
+
+    // MOV D, L
+    OPCODE_TABLE[0x55] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_L,
+    }
+
+    // MOV D, M
+    OPCODE_TABLE[0x56] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .M,
+    }
+
+    // MOV D, A
+    OPCODE_TABLE[0x57] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_D,
+        operand_b = .Register_A,
+    }
+
+    // MOV E, B
+    OPCODE_TABLE[0x58] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .Register_B,
+    }
+
+    // MOV E, C
+    OPCODE_TABLE[0x59] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .Register_C,
+    }
+
+    // MOV E, D
+    OPCODE_TABLE[0x5A] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .Register_D,
+    }
+
+    // MOV E, E
+    OPCODE_TABLE[0x5B] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .Register_E,
+    }
+
+    // MOV E, H
+    OPCODE_TABLE[0x5C] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .Register_H,
+    }
+
+    // MOV E, L
+    OPCODE_TABLE[0x5D] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .Register_L,
+    }
+
+    // MOV E, M
+    OPCODE_TABLE[0x5E] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
+        operand_b = .M,
+    }
+
+    // MOV E, A
+    OPCODE_TABLE[0x5F] = Opcode {
+        mnemonic  = .MOV,
+        length    = 1,
+        operand_a = .Register_E,
         operand_b = .Register_A,
     }
 }
